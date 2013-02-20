@@ -1,0 +1,78 @@
+#!/bin/bash
+
+FS=/tmp/sai_fs
+FSTAB=/tmp/sai_fstab
+EDIT=vim
+
+source /sai/sai_lib
+
+[[ $EUID != 0 ]] && yell "please run this as root."
+
+sai_start() {
+    say "sai will help you install Arch Linux"
+    chroot_mount
+}
+
+sai_prepare() {
+    say $FUNCNAME
+    if [[ ! -f /tmp/$FUNCNAME ]]; then
+        ask_part
+        ask_mkfs
+        ask "sai will double-check the partitions. Hit 'enter' to continue." none
+        $EDIT "$FS"
+        # format and create tmp fstab
+        prepare_disks
+        : > /tmp/$FUNCNAME
+    fi
+}
+
+sai_install() {
+    say $FUNCNAME
+    if [[ ! -f /tmp/$FUNCNAME ]]; then
+        ask "sai will edit the packages you want to install. Hit 'enter' to continue." none
+        $EDIT /sai/packages.list
+        pacman_install
+
+        # setup fstab asap
+        gen_fstab
+        : > /tmp/$FUNCNAME
+    fi
+}
+
+sai_bootloader() {
+    say $FUNCNAME
+    if [[ ! -f /tmp/$FUNCNAME ]]; then
+        /mnt/usr/sbin/syslinux-install_update -iam -c /mnt || yell "syslinux can't be installed (maybe missing 'gptfdisk')"
+        syslinuxmenu=/mnt/boot/syslinux/syslinux.cfg
+        gen_syslinux_menu
+        
+        ask "sai will edit the bootloader menu. Hit 'enter' to continue." none
+        $EDIT "$syslinuxmenu"
+
+        : > /tmp/$FUNCNAME
+    fi
+}
+
+sai_end() {
+    chroot_umount
+    sai_clean
+    say "sai did its job! you may 'reboot'"
+}
+
+
+#
+# >>> sai install stages  <<<
+#
+
+sai_start
+sai_prepare
+sai_install
+sai_bootloader
+
+# if user provides customized step, run it
+if [[ -f /sai/sai_config ]]; then
+    source /sai/sai_config
+    sai_config
+fi
+
+sai_end
