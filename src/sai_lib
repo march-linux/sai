@@ -46,7 +46,7 @@ prepare_disks() {
                 mkfs.ext4 "$part" || yell "sai can't format '$part' as ext4"
             fi
             e2label "$part" "$lbl"
-            
+
             # mount it for install and generate fstab
             if [[ "$lbl" == root ]]; then
                 mount -t ext4 "$part" /mnt || yell "sai can't mount $part as 'root'"
@@ -144,9 +144,9 @@ ask_mkfs() {
 #
 chroot_mount() {
     mkdir -p /mnt/sys /mnt/proc /mnt/dev
-    mount -t sysfs sysfs /mnt/sys
-    mount -t proc proc /mnt/proc
-    mount -o bind /dev /mnt/dev
+    mount -t sysfs sysfs /mnt/sys 2>/dev/null
+    mount -t proc proc /mnt/proc 2>/dev/null
+    mount -o bind /dev /mnt/dev 2>/dev/null
 }
 
 # chroot_umount()
@@ -169,7 +169,7 @@ pacman_install() {
     mkdir -p /mnt/var/lib/pacman /mnt/var/cache/pacman/pkg
     while true; do
         pacman --root /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm --needed \
-        -Sy $(grep -v ^# /sai/packages.list)
+            -Sy $(grep -v ^# /sai/packages.list)
         pacman_success=$?
         if [[ $pacman_success == 0 ]]; then
             break

@@ -42,13 +42,12 @@ sai_install() {
 sai_bootloader() {
     say $FUNCNAME
     if [[ ! -f /tmp/$FUNCNAME ]]; then
-        /mnt/usr/sbin/syslinux-install_update -iam -c /mnt || yell "syslinux can't be installed (maybe missing 'gptfdisk')"
         syslinuxmenu=/mnt/boot/syslinux/syslinux.cfg
         gen_syslinux_menu
-        
         ask "sai will edit the bootloader menu. Hit 'enter' to continue." none
         $EDIT "$syslinuxmenu"
-
+        
+        /mnt/usr/sbin/syslinux-install_update -iam -c /mnt || yell "syslinux can't be installed"
         : > /tmp/$FUNCNAME
     fi
 }
