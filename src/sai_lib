@@ -147,6 +147,7 @@ chroot_mount() {
     mount -t sysfs sysfs /mnt/sys 2>/dev/null
     mount -t proc proc /mnt/proc 2>/dev/null
     mount -o bind /dev /mnt/dev 2>/dev/null
+    trap "chroot_umount" EXIT
 }
 
 # chroot_umount()
