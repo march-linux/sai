@@ -184,7 +184,7 @@ pacman_install() {
 }
 
 gen_syslinux_menu() {
-    cp /sai/splash.png /mnt/boot/syslinux/
+    cp /sai/splash.jpg /mnt/boot/syslinux/
     cp /sai/syslinux.cfg /mnt/boot/syslinux/
 }
 
