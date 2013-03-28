@@ -158,12 +158,12 @@ chroot_umount() {
 }
 
 gen_pacman_mirror() {
-    mkdir -p /mnt/etc/pacman.d
-    wget -O /mnt/etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
-    sed -i "s/#Server/Server/g" /mnt/etc/pacman.d/mirrorlist
+    wget -O /etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+    sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist
 }
 
 pacman_install() {
+    # update mirrorlist
     gen_pacman_mirror
 
     # prepare pacman environment
@@ -173,6 +173,8 @@ pacman_install() {
             -Sy $(grep -v ^# /sai/packages.list)
         pacman_success=$?
         if [[ $pacman_success == 0 ]]; then
+            # use the latest mirrorlist
+            cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
             break
         else
             ask "pacman has some problems. try again? (type 'no' to skip)" retry
