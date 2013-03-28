@@ -143,18 +143,19 @@ ask_mkfs() {
 # prepares target system as a chroot
 #
 chroot_mount() {
-    mkdir -p /mnt/sys /mnt/proc /mnt/dev
+    mkdir -p /mnt/{sys,proc,dev}
     mount -t sysfs sysfs /mnt/sys 2>/dev/null
     mount -t proc proc /mnt/proc 2>/dev/null
     mount -o bind /dev /mnt/dev 2>/dev/null
-    trap "chroot_umount" EXIT
 }
 
 # chroot_umount()
 # tears down chroot in target system
 #
 chroot_umount() {
-    umount -l /mnt/sys /mnt/proc /mnt/dev
+    # lazy umount should be recursive
+    umount -l /mnt 2>/dev/null
+    rm -rf /mnt/{sys,proc,dev}
 }
 
 gen_pacman_mirror() {
@@ -195,7 +196,7 @@ gen_fstab() {
     cat "$FSTAB" >> /mnt/etc/fstab
 }
 
+# remove all locks
 sai_clean() {
-    umount -l /mnt
     rm /tmp/sai_*
 }
