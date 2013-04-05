@@ -39,9 +39,8 @@ prepare_disks() {
             echo "/dev/disk/by-label/swap swap swap defaults 0 0" >> "$FSTAB"
         else
             # run it before; umount to format again
-            if grep -qs "$part" /proc/mounts; then
-                umount "$part"
-            fi
+            grep -qs "$part" /proc/mounts && umount "$part"
+
             if [[ "$action" == format ]]; then
                 mkfs.ext4 "$part" || yell "sai can't format '$part' as ext4"
             fi
@@ -93,13 +92,19 @@ ask_part() {
         tput sgr0
 
         ask "select a disk to partition? (type 'no' to skip)" disk
-        if [[ "$disk" == no ]]; then
-            break
-        fi
-        if [[ -b "/dev/$disk" ]]; then
-            parted "/dev/$disk"
-        else
+        [[ "$disk" == no ]] && break
+        if [[ ! -b "/dev/$disk" ]]; then
             say "sai can't find device: '/dev/$disk'"
+            continue
+        fi
+        while true; do
+            ask "gpt or mbr [gpt | mbr]" format
+            [[ "$format" == gpt || "$format" == mbr ]] && break
+        done
+        if [[ "$format" == gpt ]]; then
+            cgdisk "/dev/$disk"
+        elif [[ "$format" == mbr ]]; then
+            cfdisk "/dev/$disk"
         fi
     done
 }
@@ -113,27 +118,19 @@ ask_mkfs() {
     # root
     while true; do
         ask "select a partition for 'root'? (format)" dev
-        if [[ -b "/dev/$dev" ]]; then
-            break
-        fi
+        [[ -b "/dev/$dev" ]] && break
     done
     echo "/dev/$dev:root:format" >> "$FS"
     # other
     for lbl in boot swap home; do
         while true; do
             ask "select a partition for '$lbl'? (type 'no' if you don't need it)" dev
-            if [[ -b "/dev/$dev" || "$dev" == no ]]; then
-                break
-            fi
+            [[ -b "/dev/$dev" || "$dev" == no ]] && break
         done
-        if [[ "$dev" == no ]]; then
-            continue
-        fi
+        [[ "$dev" == no ]] && continue
         while true; do
             ask "format or mount $dev? [format | mount]" action
-            if [[ "$action" == format || "$action" == mount ]]; then
-                break
-            fi
+            [[ "$action" == format || "$action" == mount ]] && break
         done
         echo "/dev/$dev:$lbl:$action" >> "$FS"
     done
@@ -153,9 +150,8 @@ chroot_mount() {
 # tears down chroot in target system
 #
 chroot_umount() {
-    # lazy umount should be recursive
-    umount -l /mnt 2>/dev/null
-    rm -rf /mnt/{sys,proc,dev}
+    umount -l /mnt/{sys,proc,dev} /mnt 2>/dev/null
+    rmdir /mnt/{sys,proc,dev} 2>/dev/null
 }
 
 gen_pacman_mirror() {
@@ -179,9 +175,7 @@ pacman_install() {
             break
         else
             ask "pacman has some problems. try again? (type 'no' to skip)" retry
-            if [[ "$retry" == no ]]; then
-                yell "sai stopped pacman"
-            fi
+            [[ "$retry" == no ]] && yell "sai stopped pacman"
         fi
     done
 }
