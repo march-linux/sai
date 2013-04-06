@@ -140,18 +140,18 @@ ask_mkfs() {
 # prepares target system as a chroot
 #
 chroot_mount() {
-    mkdir -p /mnt/{sys,proc,dev}
-    mount -t sysfs sysfs /mnt/sys 2>/dev/null
+    mkdir -p /mnt/{proc,sys,dev}
     mount -t proc proc /mnt/proc 2>/dev/null
-    mount -o bind /dev /mnt/dev 2>/dev/null
+    mount -t sysfs sys /mnt/sys 2>/dev/null
+    mount -t devtmpfs dev /mnt/dev 2>/dev/null
 }
 
 # chroot_umount()
 # tears down chroot in target system
 #
 chroot_umount() {
-    umount -l /mnt/{sys,proc,dev} /mnt 2>/dev/null
-    rmdir /mnt/{sys,proc,dev} 2>/dev/null
+    umount -l /mnt/{proc,sys,dev} /mnt 2>/dev/null
+    rmdir /mnt/{proc,sys,dev} 2>/dev/null
 }
 
 gen_pacman_mirror() {
