@@ -47,7 +47,7 @@ sai_bootloader() {
         ask "sai will edit the bootloader menu. Hit 'enter' to continue." none
         $EDIT "$syslinuxmenu"
         
-        /mnt/usr/sbin/syslinux-install_update -iam -c /mnt || yell "syslinux can't be installed"
+        /mnt/usr/bin/syslinux-install_update -iam -c /mnt || yell "syslinux can't be installed"
         : > /tmp/$FUNCNAME
     fi
 }
