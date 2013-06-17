@@ -26,10 +26,11 @@ yell() {
 
 prepare_disks() {
     : > "$FSTAB"
-    for line in $(cat "$FS"); do
-        local part="$(echo "$line" | cut -d : -f 1)"
-        local lbl="$(echo "$line" | cut -d : -f 2)"
-        local action="$(echo "$line" | cut -d : -f 3)"
+    local line
+    for line in $(< "$FS"); do
+        local part="$(cut -d : -f 1 <<<"$line")"
+        local lbl="$(cut -d : -f 2 <<<"$line")"
+        local action="$(cut -d : -f 3 <<<"$line")"
 
         if [[ "$lbl" == swap ]]; then
             swapoff "$part"
@@ -74,12 +75,14 @@ get_size() {
 }
 
 avail_disks() {
+    local disk
     for disk in $(find_disks); do
         echo "$disk: $(get_size "/dev/$disk")"
     done
 }
 
 avail_parts() {
+    local part
     for part in $(find_parts); do
         echo "$part: $(get_size "/dev/$part")"
     done
@@ -122,6 +125,7 @@ ask_mkfs() {
     done
     echo "/dev/$dev:root:format" >> "$FS"
     # other
+    local lbl
     for lbl in boot swap home; do
         while true; do
             ask "select a partition for '$lbl'? (type 'no' if you don't need it)" dev
