@@ -26,12 +26,7 @@ yell() {
 
 prepare_disks() {
     : > "$FSTAB"
-    local line
-    for line in $(< "$FS"); do
-        local part="$(cut -d : -f 1 <<<"$line")"
-        local lbl="$(cut -d : -f 2 <<<"$line")"
-        local action="$(cut -d : -f 3 <<<"$line")"
-
+    while IFS=: read part lbl action; do
         if [[ "$lbl" == swap ]]; then
             swapoff "$part"
             mkswap -L swap "$part" || yell "sai can't format $part as swap"
@@ -59,7 +54,7 @@ prepare_disks() {
                 echo "/dev/disk/by-label/$lbl /$lbl ext4 defaults,noatime 0 2" >> "$FSTAB"
             fi
         fi
-    done
+    done < "$FS"
 }
 
 find_disks() {
