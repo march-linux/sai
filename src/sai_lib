@@ -32,7 +32,7 @@ prepare_disks() {
             mkswap -L swap "$part" || yell "sai can't format $part as swap"
             swapon "$part"
 
-            echo "/dev/disk/by-label/swap swap swap defaults 0 0" >> "$FSTAB"
+            echo "/dev/disk/by-label/swap swap swap defaults 0 0"
         else
             # run it before; umount to format again
             grep -qs "$part" /proc/mounts && umount "$part"
@@ -46,15 +46,15 @@ prepare_disks() {
             if [[ "$lbl" == root ]]; then
                 mount -t ext4 "$part" /mnt || yell "sai can't mount $part as 'root'"
 
-                echo "/dev/disk/by-label/root / ext4 defaults,noatime 0 1" >> "$FSTAB"
+                echo "/dev/disk/by-label/root / ext4 defaults,noatime 0 1"
             else
                 mkdir -p "/mnt/$lbl"
                 mount -t ext4 "$part" "/mnt/$lbl" || yell "sai can't mount $part as '$lbl'"
 
-                echo "/dev/disk/by-label/$lbl /$lbl ext4 defaults,noatime 0 2" >> "$FSTAB"
+                echo "/dev/disk/by-label/$lbl /$lbl ext4 defaults,noatime 0 2"
             fi
         fi
-    done < "$FS"
+    done < "$FS" >> "$FSTAB"
 }
 
 find_disks() {
@@ -131,8 +131,8 @@ ask_mkfs() {
             ask "format or mount $dev? [format | mount]" action
             [[ "$action" == format || "$action" == mount ]] && break
         done
-        echo "/dev/$dev:$lbl:$action" >> "$FS"
-    done
+        echo "/dev/$dev:$lbl:$action"
+    done >> "$FS"
 }
 
 # chroot_mount()
