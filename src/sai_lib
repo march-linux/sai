@@ -1,5 +1,7 @@
 #!/bin/bash
 
+shopt -s nullglob
+
 say() {
     tput setaf 4
     echo -n " :: "
@@ -13,7 +15,7 @@ ask() {
     echo -n " -> "
     tput sgr0
     echo -n "$1  "
-    read $2
+    read -r $2
 }
 
 yell() {
@@ -26,7 +28,7 @@ yell() {
 
 prepare_disks() {
     : > "$FSTAB"
-    while IFS=: read part lbl action; do
+    while IFS=: read -r part lbl action; do
         if [[ "$lbl" == swap ]]; then
             swapoff "$part"
             mkswap -L swap "$part" || yell "sai can't format $part as swap"
@@ -57,29 +59,21 @@ prepare_disks() {
     done < "$FS" >> "$FSTAB"
 }
 
-find_disks() {
-    find /dev/ -name "sd[a-z]" | cut -d / -f 3
-}
-
-find_parts() {
-    find /dev/ -name "sd[a-z][1-9]" | cut -d / -f 3
-}
-
 get_size() {
     fdisk -l "$1" 2>/dev/null | sed -n 2p | cut -d , -f 1 | cut -d ' ' -f 3,4
 }
 
 avail_disks() {
     local disk
-    for disk in $(find_disks); do
-        echo "$disk: $(get_size "/dev/$disk")"
+    for disk in /dev/sd[a-z]; do
+        echo "$disk: $(get_size "$disk")"
     done
 }
 
 avail_parts() {
     local part
-    for part in $(find_parts); do
-        echo "$part: $(get_size "/dev/$part")"
+    for part in /dev/sd[a-z][1-9]; do
+        echo "$part: $(get_size "$part")"
     done
 }
 
@@ -186,9 +180,4 @@ gen_syslinux_menu() {
 gen_fstab() {
     # fstab is generated in "prepare_disks"
     cat "$FSTAB" >> /mnt/etc/fstab
-}
-
-# remove all locks
-sai_clean() {
-    rm /tmp/sai_*
 }

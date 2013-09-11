@@ -53,8 +53,6 @@ sai_bootloader() {
 }
 
 sai_end() {
-    chroot_umount
-    sai_clean
     say "sai did its job! you may 'reboot'"
 }
 
