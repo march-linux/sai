@@ -60,7 +60,7 @@ prepare_disks() {
 }
 
 get_size() {
-    fdisk -l "$1" 2>/dev/null | sed -n 2p | cut -d , -f 1 | cut -d ' ' -f 3,4
+    fdisk -l "$1" 2>/dev/null | awk -F '[ ,]' 'NR==2 {print $3, $4}'
 }
 
 avail_disks() {
