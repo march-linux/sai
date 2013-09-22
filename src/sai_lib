@@ -28,6 +28,9 @@ yell() {
 
 prepare_disks() {
     : > "$FSTAB"
+    local part
+    local lbl
+    local action
     while IFS=: read -r part lbl action; do
         if [[ "$lbl" == swap ]]; then
             swapoff "$part"
