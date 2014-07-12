@@ -4,7 +4,7 @@ shopt -s nullglob
 
 say() {
     tput setaf 4
-    echo -n " :: "
+    echo -n ":: "
     tput sgr0
     echo "$1"
 }
@@ -12,15 +12,15 @@ say() {
 # save ans to $2
 ask() {
     tput setaf 3
-    echo -n " -> "
+    echo -n "-> "
     tput sgr0
     echo -n "$1  "
-    read -r $2
+    read -r "$2"
 }
 
 yell() {
     tput setaf 1
-    echo -n " !! "
+    echo -n "!! "
     tput sgr0
     echo "$1"
     exit
