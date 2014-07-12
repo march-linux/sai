@@ -151,7 +151,7 @@ chroot_umount() {
 }
 
 gen_pacman_mirror() {
-    wget -O /etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+    curl -o /etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
     sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist
 }
 
