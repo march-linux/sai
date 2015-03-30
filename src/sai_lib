@@ -63,7 +63,7 @@ prepare_disks() {
 }
 
 get_size() {
-    fdisk -l "$1" 2>/dev/null | awk -F '[ ,]' 'NR==2 {print $3, $4}'
+    lsblk -n -o SIZE "$1"
 }
 
 avail_disks() {
@@ -164,8 +164,7 @@ pacman_install() {
     while true; do
         pacman --root /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm --needed \
             -Sy $(grep -v ^# /sai/packages.list)
-        pacman_success=$?
-        if [[ $pacman_success == 0 ]]; then
+        if [[ $? == 0 ]]; then
             # use the latest mirrorlist
             cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
             break
