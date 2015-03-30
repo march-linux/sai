@@ -63,7 +63,7 @@ prepare_disks() {
 }
 
 get_size() {
-    lsblk -n -o SIZE "$1"
+    lsblk -r -d -n -o SIZE "$1"
 }
 
 avail_disks() {
