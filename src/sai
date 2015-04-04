@@ -4,9 +4,168 @@ readonly FS=/tmp/sai_fs
 readonly FSTAB=/tmp/sai_fstab
 readonly EDIT=vim
 
-source /sai/sai-functions
+say() {
+	tput setaf 4
+	echo -n ":: "
+	tput sgr0
+	echo "$1"
+}
 
-(( EUID == 0 )) || yell "please run this as root."
+# save ans to $2
+ask() {
+	tput setaf 3
+	echo -n "-> "
+	tput sgr0
+	echo -n "$1  "
+	read -r "$2"
+}
+
+yell() {
+	tput setaf 1
+	echo -n "!! "
+	tput sgr0
+	echo "$1"
+	exit
+}
+
+prepare_disks() {
+	: > "$FSTAB"
+	local part
+	local lbl
+	local action
+	while IFS=: read -r part lbl action; do
+		if [[ "$lbl" == swap ]]; then
+			swapoff "$part"
+			mkswap -L swap "$part" || yell "sai can't format $part as swap"
+			swapon "$part"
+
+			echo "/dev/disk/by-label/swap swap swap defaults 0 0"
+		else
+			# run it before; umount to format again
+			grep -qs "$part" /proc/mounts && umount "$part"
+
+			if [[ "$action" == format ]]; then
+				mkfs.ext4 "$part" || yell "sai can't format '$part' as ext4"
+			fi
+			e2label "$part" "$lbl"
+
+			# mount it for install and generate fstab
+			if [[ "$lbl" == root ]]; then
+				mount -t ext4 "$part" /mnt || yell "sai can't mount $part as 'root'"
+
+				echo "/dev/disk/by-label/root / ext4 defaults,noatime 0 1"
+			else
+				mkdir -p "/mnt/$lbl"
+				mount -t ext4 "$part" "/mnt/$lbl" || yell "sai can't mount $part as '$lbl'"
+
+				echo "/dev/disk/by-label/$lbl /$lbl ext4 defaults,noatime 0 2"
+			fi
+		fi
+	done < "$FS" >> "$FSTAB"
+}
+
+ask_part() {
+	while true; do
+		lsblk -d
+
+		ask "select a disk to partition? (type 'no' to skip)" disk
+		[[ "$disk" == no ]] && break
+		if [[ ! -b "/dev/$disk" ]]; then
+			say "sai can't find device: '/dev/$disk'"
+			continue
+		fi
+		while true; do
+			ask "gpt or mbr [gpt | mbr]" format
+			[[ "$format" == gpt || "$format" == mbr ]] && break
+		done
+		case "$format" in
+			gpt)
+				cgdisk "/dev/$disk"
+				;;
+			mbr)
+				cfdisk "/dev/$disk"
+				;;
+		esac
+	done
+}
+
+ask_mkfs() {
+	: > "$FS"
+	lsblk
+
+	# root
+	while true; do
+		ask "select a partition for 'root'? (format)" dev
+		[[ -b "/dev/$dev" ]] && break
+	done
+	echo "/dev/$dev:root:format" >> "$FS"
+	# other
+	local lbl
+	for lbl in boot swap home; do
+		while true; do
+			ask "select a partition for '$lbl'? (type 'no' if you don't need it)" dev
+			[[ -b "/dev/$dev" || "$dev" == no ]] && break
+		done
+		[[ "$dev" == no ]] && continue
+		while true; do
+			ask "format or mount $dev? [format | mount]" action
+			[[ "$action" == format || "$action" == mount ]] && break
+		done
+		echo "/dev/$dev:$lbl:$action"
+	done >> "$FS"
+}
+
+# chroot_mount()
+# prepares target system as a chroot
+#
+chroot_mount() {
+	mkdir -p /mnt/{proc,sys,dev}
+	mount -t proc proc /mnt/proc 2>/dev/null
+	mount -t sysfs sys /mnt/sys 2>/dev/null
+	mount -t devtmpfs dev /mnt/dev 2>/dev/null
+}
+
+# chroot_umount()
+# tears down chroot in target system
+#
+chroot_umount() {
+	umount -l /mnt/{proc,sys,dev} /mnt 2>/dev/null
+	rmdir /mnt/{proc,sys,dev} 2>/dev/null
+}
+
+gen_pacman_mirror() {
+	curl -o /etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
+	sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist
+}
+
+pacman_install() {
+	# update mirrorlist
+	gen_pacman_mirror
+
+	# prepare pacman environment
+	mkdir -p /mnt/var/lib/pacman /mnt/var/cache/pacman/pkg
+	while true; do
+		pacman --root /mnt --cachedir /mnt/var/cache/pacman/pkg --noconfirm --needed \
+			-Sy $(grep -v ^# /sai/packages.list)
+		if (( $? == 0 )); then
+			# use the latest mirrorlist
+			cp /etc/pacman.d/mirrorlist /mnt/etc/pacman.d/mirrorlist
+			break
+		else
+			ask "pacman has some problems. try again? (type 'no' to skip)" retry
+			[[ "$retry" == no ]] && yell "sai stopped pacman"
+		fi
+	done
+}
+
+gen_syslinux_menu() {
+	cp /sai/syslinux.cfg /mnt/boot/syslinux/
+}
+
+gen_fstab() {
+	# fstab is generated in "prepare_disks"
+	cat "$FSTAB" >> /mnt/etc/fstab
+}
 
 sai_start() {
 	say "sai will help you install Arch Linux"
@@ -60,6 +219,8 @@ sai_end() {
 #
 # >>> sai install stages  <<<
 #
+
+(( EUID == 0 )) || yell "please run this as root."
 
 sai_start
 sai_prepare
