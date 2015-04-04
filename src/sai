@@ -6,7 +6,7 @@ EDIT=vim
 
 source /sai/sai_lib
 
-[[ $EUID != 0 ]] && yell "please run this as root."
+(( EUID == 0 )) || yell "please run this as root."
 
 sai_start() {
     say "sai will help you install Arch Linux"
