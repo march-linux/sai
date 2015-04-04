@@ -4,7 +4,7 @@ readonly FS=/tmp/sai_fs
 readonly FSTAB=/tmp/sai_fstab
 readonly EDIT=vim
 
-source /sai/sai_lib
+source /sai/sai-functions
 
 (( EUID == 0 )) || yell "please run this as root."
 
