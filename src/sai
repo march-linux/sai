@@ -1,8 +1,8 @@
 #!/bin/bash
 
-FS=/tmp/sai_fs
-FSTAB=/tmp/sai_fstab
-EDIT=vim
+readonly FS=/tmp/sai_fs
+readonly FSTAB=/tmp/sai_fstab
+readonly EDIT=vim
 
 source /sai/sai_lib
 
