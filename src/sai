@@ -230,7 +230,7 @@ sai_bootloader
 # if user provides customized step, run it
 if [[ -f /sai/sai_config ]]; then
 	source /sai/sai_config
-	sai_config
+	chroot /mnt sai_config
 fi
 
 sai_end
