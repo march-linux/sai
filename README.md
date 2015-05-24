@@ -1,37 +1,33 @@
-#sai: simple arch installer
+# sai: simple arch installer
 
-released under GPL3
-put files in /sai
+It is released under GPL2, and places all installation files in `/sai`.
 
-#feature
+# Feature
 
-1. semi-automatic: sai uses smart default options, you just need to input required ones.
-2. use noatime: this option reduces disk write.
-3. use util-linux: this results in minimum dependencies. the only "unexpected" dependency is vim.
-4. install in step: if an unexpected error occurs, the installer will bail out and show an error msg.
-after you fix the error manually, run the installer again, and sai will lead you to where you was. 
+* Semi-automatic: sai uses smart default options, you just need to input required ones.
+* Use util-linux: This results in minimum dependencies. The only "unexpected" dependency is vim.
+* Install in steps: If an unexpected error occurs, the installer will bail out and show an error message.
+After you fix the error manually, run the installer again, and sai will lead you to where you was.
 This also works for pacman, which often quits due to unstable internet.
 
-#tips for beginners
+# Tips for beginners
 
-1. if you don't know how to use vim, simply type ":q". This means "quit". Because sai already makes
-the smart decision for you, for most cases you can skip it.
+* If you don't know how to use vim, simply type ":q". This means "quit". Because sai already makes
+the smart decision for you, for most cases you can skip it. Type "i" to start changing the config.
+Type ":wq" to save the changes. Type ":q!" to quit without saving.
 
-2. for advanced users, in vim, type "i" to start changing the config. type ":wq" to save the changes.
-type ":q!" to quit without saving.
+* If you see "sai has done its job!", that means the installation is completed. If you don't see such
+a message, fix the error and retry.
 
-3. if you see "sai has done its job!", that means the installation is complete. if you dont see such
-a msg, fix the error message, and retry sai.
+# For advanced users
 
-#for advanced users
+* `package.list` has all packages you will install; change it to fit your needs.
 
-1. package.list has all packages you will install. change it to fit your needs.
+* `sai_config` has all the customizations you will want to make for the install. You can add a user account,
+remove or change files. For example, you can edit `rc.conf`.
 
-2. sai_config has all the customizations you will want to make for the install. you can add a user account,
-remove or change files. for example, you may chroot and edit rc.conf.
-
-3. you are welcome to keep your own version of package.list and sai_config. This helps you to quickly
+* You are welcomed to keep your own version of `package.list` and `sai_config`. This helps you to quickly
 deploy your machine.
 
 
-##Good Luck, archers!
+## Good Luck, archers!
