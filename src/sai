@@ -4,27 +4,18 @@ readonly FS=/tmp/sai_fs
 readonly FSTAB=/tmp/sai_fstab
 readonly EDIT=vim
 
+
 say() {
-	tput setaf 4
-	echo -n ":: "
-	tput sgr0
-	echo "$1"
+	echo "$(tput setaf 4)::$(tput sgr0) $1"
 }
 
-# save ans to $2
 ask() {
-	tput setaf 3
-	echo -n "-> "
-	tput sgr0
-	echo -n "$1  "
+	echo -n "$(tput setaf 3)->$(tput sgr0) $1 "
 	read -r "$2"
 }
 
 yell() {
-	tput setaf 1
-	echo -n "!! "
-	tput sgr0
-	echo "$1"
+	echo -n "$(tput setaf 1)!!$(tput sgr0) $1"
 	exit
 }
 
@@ -39,7 +30,7 @@ prepare_disks() {
 			mkswap -L swap "$part" || yell "sai can't format $part as swap"
 			swapon "$part"
 
-			echo "/dev/disk/by-label/swap swap swap defaults 0 0"
+			echo '/dev/disk/by-label/swap swap swap defaults 0 0'
 		else
 			# run it before; umount to format again
 			grep -qs "$part" /proc/mounts && umount "$part"
@@ -53,7 +44,7 @@ prepare_disks() {
 			if [[ "$lbl" == root ]]; then
 				mount -t ext4 "$part" /mnt || yell "sai can't mount $part as 'root'"
 
-				echo "/dev/disk/by-label/root / ext4 defaults,noatime 0 1"
+				echo '/dev/disk/by-label/root / ext4 defaults,noatime 0 1'
 			else
 				mkdir -p "/mnt/$lbl"
 				mount -t ext4 "$part" "/mnt/$lbl" || yell "sai can't mount $part as '$lbl'"
@@ -75,7 +66,7 @@ ask_part() {
 			continue
 		fi
 		while true; do
-			ask "gpt or mbr [gpt | mbr]" format
+			ask 'gpt or mbr [gpt | mbr]' format
 			[[ "$format" == gpt || "$format" == mbr ]] && break
 		done
 		case "$format" in
@@ -135,7 +126,7 @@ chroot_umount() {
 
 gen_pacman_mirror() {
 	curl -o /etc/pacman.d/mirrorlist 'https://www.archlinux.org/mirrorlist/?country=all&protocol=http&use_mirror_status=on'
-	sed -i "s/#Server/Server/g" /etc/pacman.d/mirrorlist
+	sed -i 's/#Server/Server/g' /etc/pacman.d/mirrorlist
 }
 
 pacman_install() {
@@ -153,7 +144,7 @@ pacman_install() {
 			break
 		else
 			ask "pacman has some problems. try again? (type 'no' to skip)" retry
-			[[ "$retry" == no ]] && yell "sai stopped pacman"
+			[[ "$retry" == no ]] && yell 'sai stopped pacman'
 		fi
 	done
 }
@@ -168,7 +159,7 @@ gen_fstab() {
 }
 
 sai_start() {
-	say "sai will help you install Arch Linux"
+	say 'sai will help you install Arch Linux'
 	chroot_mount
 }
 
@@ -220,7 +211,7 @@ sai_end() {
 # >>> sai install stages  <<<
 #
 
-(( EUID == 0 )) || yell "please run this as root."
+(( EUID == 0 )) || yell 'please run this as root.'
 
 sai_start
 sai_prepare
